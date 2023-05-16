@@ -5,22 +5,22 @@ import { InMemoryGymsRepository } from '@/repositories/in-memory/in-memory-gyms-
 import { Decimal } from '@prisma/client/runtime'
 
 let checkInsRepository: InMemoryCheckInsRepository
-let sut: CheckInUseCase
 let gymsRepository: InMemoryGymsRepository
+let sut: CheckInUseCase
 
 describe('Check-In Use Case', () => {
   beforeEach(() => {
     checkInsRepository = new InMemoryCheckInsRepository()
-    sut = new CheckInUseCase(checkInsRepository, gymsRepository)
     gymsRepository = new InMemoryGymsRepository()
+    sut = new CheckInUseCase(checkInsRepository, gymsRepository)
 
     gymsRepository.items.push({
       id: 'gym01',
       title: 'academia teste',
       description: '',
       phone: '',
-      latitude: new Decimal(0),
-      longitude: new Decimal(0),
+      latitude: new Decimal(-27.2092052),
+      longitude: new Decimal(-49.6401091),
     })
 
     vi.useFakeTimers()
@@ -38,6 +38,25 @@ describe('Check-In Use Case', () => {
     })
 
     expect(checkIn.id).toEqual(expect.any(String))
+  })
+  it('should not be able to Check In on distant gym', async () => {
+    gymsRepository.items.push({
+      id: 'gym02',
+      title: 'academia teste',
+      description: '',
+      phone: '',
+      latitude: new Decimal(-27.0747279),
+      longitude: new Decimal(-49.4889672),
+    })
+
+    await expect(() =>
+      sut.execute({
+        gymId: 'gym02',
+        userId: 'user02',
+        userLatitude: -27.2092052,
+        userLongitude: -49.6401091,
+      }),
+    ).rejects.toBeInstanceOf(Error)
   })
   it('should not be able to Check In twice in the same day', async () => {
     vi.setSystemTime(new Date(2022, 0, 20, 8, 0, 0))
