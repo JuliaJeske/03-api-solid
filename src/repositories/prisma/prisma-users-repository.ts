@@ -4,6 +4,15 @@ import { UsersRepository } from '../users-repository'
 
 // metodos que vai interceptar as operacoes no banco de dados
 export class PrismaUserRepository implements UsersRepository {
+  async findById(id: string) {
+    const user = await prisma.user.findUnique({
+      where: {
+        id,
+      },
+    })
+    return user
+  }
+
   async findByEmail(email: string) {
     const user = await prisma.user.findUnique({
       where: {
